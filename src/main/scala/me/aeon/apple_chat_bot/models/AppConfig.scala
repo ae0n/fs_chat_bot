@@ -1,4 +1,4 @@
-package me.aeon.apple_chat_bot.scenarios.models
+package me.aeon.apple_chat_bot.models
 import pureconfig.generic.semiauto._
 
 

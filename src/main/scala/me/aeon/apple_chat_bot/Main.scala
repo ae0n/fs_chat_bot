@@ -3,7 +3,7 @@ package me.aeon.apple_chat_bot
 import canoe.api.{Bot, TelegramClient}
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import fs2._
-import me.aeon.apple_chat_bot.scenarios.models.AppConfig
+import me.aeon.apple_chat_bot.models.AppConfig
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax._
 import cats.implicits._
@@ -22,7 +22,7 @@ object Main extends IOApp {
       implicit0(client: TelegramClient[IO]) <- Stream.resource(
         TelegramClient.global[IO](config.botToken)
       )
-      bot <- Bot.polling[IO].follow( ??? )
+      _ <- Bot.polling[IO].follow( ??? )
 
     } yield ExitCode.Success
     appStream.compile.lastOrError
