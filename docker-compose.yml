@@ -1,0 +1,14 @@
+version: '3.1'
+services:
+  postgres:
+    image: postgis/postgis:9.6-3.0-alpine
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-12345678}"
+      POSTGRES_DB: "${POSTGRES_DB:-bot_db}"
+      POSTGRES_USER: "${POSTGRES_USER:-bot_db}"
+    volumes:
+    - postgres-volume:/var/lib/postgresql/data
+    ports:
+    - 5432:5432
+volumes:
+  postgres-volume:
