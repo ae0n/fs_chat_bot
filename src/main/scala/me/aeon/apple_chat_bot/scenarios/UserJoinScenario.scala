@@ -1,30 +1,25 @@
 package me.aeon.apple_chat_bot.scenarios
 
 import canoe.api._
-import canoe.api.models.Keyboard
+import canoe.models.User
 import canoe.models.messages.{ChatMemberAdded, TelegramMessage, TextMessage}
-import canoe.models.outgoing.TextContent
-import canoe.models.{InlineKeyboardButton, InlineKeyboardMarkup, User}
+import cats.data.OptionT
 import cats.effect.Async
 import cats.implicits._
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
 
-class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F]) {
+class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F]) extends BaseScenario {
 
   private val memberAddedPF: PartialFunction[TelegramMessage, ChatMemberAdded] = {
     case m: ChatMemberAdded => m
   }
-
-  def text(str: String): TextContent = TextContent(str)
 
   def sendGreetingMessage(msg: ChatMemberAdded): F[Unit] = {
     msg.newChatMembers.toList.traverse(greetUser(msg, _)).void
   }
 
   def greetUser(msg: ChatMemberAdded, user: User): F[TextMessage] = {
-    val keyboardButton = InlineKeyboardButton.callbackData(strings.imNotABot, "")
-    val markup = InlineKeyboardMarkup.singleButton(keyboardButton)
 
     userService
       .getUserById(user.id)
@@ -36,8 +31,10 @@ class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F])
           msg.chat.send(text(strings.welcomeBackMessage), msg.messageId.some)
         case None =>
           val newUser = ChatUser.fromUser(user).copy(state = UserState.Unchecked)
-          userService.addUser(newUser) >>
-            msg.chat.send(text(strings.userJoinMessage), msg.messageId.some, Keyboard.Inline(markup))
+          for {
+            _ <- OptionT(userService.addUser(newUser)).getOrElseF(Async[F].raiseError(new Throwable("unable to create user")))
+            message <- msg.chat.send(text(strings.userJoinMessage), msg.messageId.some, button(strings.imNotABot, user.id.toString))
+          } yield message
       }
   }
 
