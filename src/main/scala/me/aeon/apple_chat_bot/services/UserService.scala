@@ -1,20 +1,24 @@
 package me.aeon.apple_chat_bot.services
 
-import cats.effect.{Resource, Sync}
+import cats.effect.Sync
 import cats.implicits._
 import doobie._
 import doobie.implicits._
 import me.aeon.apple_chat_bot.dao.ChatUsersDao
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 
-class UserService[F[_]: Sync](transactor: Transactor[F]) {
+class UserService[F[_] : Sync](transactor: Transactor[F]) {
 
   def getUserById(id: Int): F[Option[ChatUser]] = {
     ChatUsersDao.findById(id).transact(transactor)
   }
 
   def addUser(user: ChatUser) = {
-    ChatUsersDao.insert(user).transact(transactor)
+    Sync[F].handleError(ChatUsersDao.insert(user).transact(transactor)) {
+      case e =>
+        println(e)
+        None
+    }
   }
 
   def getOrCreateUser(user: ChatUser) = {
@@ -27,7 +31,7 @@ class UserService[F[_]: Sync](transactor: Transactor[F]) {
 
 object UserService {
 
-  def apply[F[_]: Sync](transactor: Transactor[F]) = {
+  def apply[F[_] : Sync](transactor: Transactor[F]) = {
     (new UserService[F](transactor)).pure[F]
   }
 }

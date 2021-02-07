@@ -5,7 +5,7 @@ version := "0.1"
 scalaVersion := "2.13.3"
 
 libraryDependencies ++= Seq(
-  "org.augustjune" %% "canoe" % "0.5.0",
+  "org.augustjune" %% "canoe" % "0.5.1",
   "org.tpolecat" %% "doobie-core"      % Versions.doobie,
   "org.tpolecat" %% "doobie-hikari"    % Versions.doobie,
   "org.tpolecat" %% "doobie-postgres"  % Versions.doobie,
