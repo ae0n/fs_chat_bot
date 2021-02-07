@@ -25,7 +25,9 @@ class UserService[F[_] : Sync](transactor: Transactor[F]) {
     getUserById(user.id).flatMap(_.fold(addUser(user))(_.some.pure[F]))
   }
 
-  def updateUserState(userId: Int, state: UserState) = {}
+  def updateUserState(userId: Int, state: UserState) = {
+    ChatUsersDao.updateUserState(userId, state).transact(transactor)
+  }
 
 }
 

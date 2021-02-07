@@ -54,7 +54,7 @@ object ChatUsersDao extends MetaConstructors with TimeMetaInstances {
 
   def updateUserState(userId: Int, state: UserState) = {
     sql"""UPDATE users
-         |SET state=$state
+         |SET status=$state
          |WHERE id=$userId
          """.stripMargin.update.run.attemptSql.map {
       case Left(value) =>
