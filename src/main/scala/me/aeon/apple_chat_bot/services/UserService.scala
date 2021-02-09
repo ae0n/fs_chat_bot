@@ -29,6 +29,10 @@ class UserService[F[_] : Sync](transactor: Transactor[F]) {
     ChatUsersDao.updateUserState(userId, state).transact(transactor)
   }
 
+  def findUsersWithState(state:UserState): F[Seq[ChatUser]] = {
+    ChatUsersDao.findByStatus(state).transact(transactor)
+  }
+
 }
 
 object UserService {

@@ -16,7 +16,7 @@ class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F]
     OptionT.fromOption[F](query.data.flatMap(_.toIntOption))
       .filter(_ == query.from.id)
       .flatMapF[ChatUser](userService.getUserById)
-      .filter(_.state == UserState.Unchecked)
+      .filter(_.status == UserState.Unchecked)
       .semiflatTap(u => userService.updateUserState(u.id, UserState.Normal))
       .value
   }

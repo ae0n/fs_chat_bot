@@ -24,13 +24,13 @@ class UserJoinScenario[F[_] : TelegramClient : Async](userService: UserService[F
     userService
       .getUserById(user.id)
       .flatMap {
-        case Some(u) if u.state == UserState.Blocked =>
+        case Some(u) if u.status == UserState.Blocked =>
           msg.chat.kickUser(user.id) >>
             msg.chat.send(text(strings.alreadyBannedMessage), msg.messageId.some)
         case Some(_) =>
           msg.chat.send(text(strings.welcomeBackMessage), msg.messageId.some)
         case None =>
-          val newUser = ChatUser.fromUser(user).copy(state = UserState.Unchecked)
+          val newUser = ChatUser.fromUser(user, msg.chat).copy(status = UserState.Unchecked)
           for {
             _ <- OptionT(userService.addUser(newUser)).getOrElseF(Async[F].raiseError(new Throwable("unable to create user")))
             message <- msg.chat.send(text(strings.userJoinMessage), msg.messageId.some, button(strings.imNotABot, user.id.toString))

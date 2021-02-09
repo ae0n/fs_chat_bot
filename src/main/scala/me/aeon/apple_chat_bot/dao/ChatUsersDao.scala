@@ -9,7 +9,7 @@ import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 object ChatUsersDao extends MetaConstructors with TimeMetaInstances {
 
   private def findByBase(fragment: Fragment) = {
-    (sql"""SELECT id, first_name, last_name, username, status, first_visit FROM users WHERE """ ++ fragment)
+    (sql"""SELECT id, first_name, last_name, username, chat_id, status, first_visit, last_status_changed_at FROM users WHERE """ ++ fragment)
       .query[ChatUser]
   }
 
@@ -36,8 +36,8 @@ object ChatUsersDao extends MetaConstructors with TimeMetaInstances {
   def insert(user: ChatUser): doobie.ConnectionIO[Option[ChatUser]] = {
     (for {
       _ <-
-        sql"""INSERT INTO users(id, first_name, last_name, username, status, first_visit)
-             |VALUES(${user.id}, ${user.firstName}, ${user.lastName}, ${user.username}, ${user.state}, ${user.firstVisit})""".stripMargin.update.run
+        sql"""INSERT INTO users(id, first_name, last_name, username, chat_id, status, first_visit, last_status_changed_at)
+             |VALUES(${user.id}, ${user.firstName}, ${user.lastName}, ${user.username}, ${user.chatId}, ${user.status}, ${user.firstVisit}, ${user.lastStatusChangedAt})""".stripMargin.update.run
       newUser <- findById(user.id)
     } yield newUser).attemptSql.map {
       case Left(value) =>
@@ -50,11 +50,11 @@ object ChatUsersDao extends MetaConstructors with TimeMetaInstances {
 
   def findById(id: Int): doobie.ConnectionIO[Option[ChatUser]] = findByOne(fr"""id=$id""")
 
-  def findByStatus(status: String): doobie.ConnectionIO[Seq[ChatUser]] = findByMany(fr"""status=$status""")
+  def findByStatus(status: UserState): doobie.ConnectionIO[Seq[ChatUser]] = findByMany(fr"""status=$status""")
 
   def updateUserState(userId: Int, state: UserState) = {
     sql"""UPDATE users
-         |SET status=$state
+         |SET status=$state, last_status_changed_at=now()
          |WHERE id=$userId
          """.stripMargin.update.run.attemptSql.map {
       case Left(value) =>
