@@ -5,7 +5,7 @@ import cats.effect.{Blocker, ExitCode, IO, IOApp, Resource}
 import doobie.util.transactor.Transactor
 import fs2._
 import me.aeon.apple_chat_bot.models.AppConfig
-import me.aeon.apple_chat_bot.scenarios.{CallbackHandler, UserJoinScenario}
+import me.aeon.apple_chat_bot.scenarios.{CallbackHandler, UserCheckJob, UserJoinScenario}
 import me.aeon.apple_chat_bot.services.{Database, UserService}
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax._
@@ -25,7 +25,7 @@ object Main extends IOApp {
       userService <- Stream.eval(UserService[IO](transactor))
       userJoinScenario <- Stream.eval(UserJoinScenario[IO](userService))
       callbackHandler <- Stream.eval(CallbackHandler[IO](userService))
-      _ <- Bot.polling[IO].follow(userJoinScenario.scenario).through(callbackHandler.callbacks)
+      _ <- UserCheckJob.stream(userService) concurrently Bot.polling[IO].follow(userJoinScenario.scenario).through(callbackHandler.callbacks)
     } yield ()
 
   }
