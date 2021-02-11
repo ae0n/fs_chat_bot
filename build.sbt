@@ -13,6 +13,10 @@ libraryDependencies ++= Seq(
   "com.github.pureconfig" %% "pureconfig-cats-effect" % Versions.pureconfig,
   "com.beachape" %% "enumeratum" % "1.6.1",
   "com.beachape" %% "enumeratum-doobie" % "1.6.0",
+  "com.github.cb372" %% "scalacache-caffeine" % "0.28.0",
+  "com.github.cb372" %% "scalacache-cats-effect" % "0.28.0",
+  "net.ruippeixotog" %% "scala-scraper" % "2.2.0",
+
 )
 
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")

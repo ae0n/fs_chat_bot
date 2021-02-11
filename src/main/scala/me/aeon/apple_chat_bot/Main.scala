@@ -5,8 +5,8 @@ import cats.effect.{Blocker, ExitCode, IO, IOApp, Resource}
 import doobie.util.transactor.Transactor
 import fs2._
 import me.aeon.apple_chat_bot.models.AppConfig
-import me.aeon.apple_chat_bot.scenarios.{CallbackHandler, UserCheckJob, UserJoinScenario}
-import me.aeon.apple_chat_bot.services.{Database, UserService}
+import me.aeon.apple_chat_bot.scenarios.{CallbackHandler, UserCheckJob, UserJoinScenario, UserMessageScenario}
+import me.aeon.apple_chat_bot.services.{Database, UserService, WebsiteCache}
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax._
 
@@ -22,10 +22,12 @@ object Main extends IOApp {
       implicit0(client: TelegramClient[IO]) <- Stream.resource(
         TelegramClient.global[IO](config.botToken)
       )
+      websiteCache <- Stream.eval(WebsiteCache[IO])
       userService <- Stream.eval(UserService[IO](transactor))
       userJoinScenario <- Stream.eval(UserJoinScenario[IO](userService))
+      userMessageScenario <- Stream.eval(UserMessageScenario[IO](websiteCache))
       callbackHandler <- Stream.eval(CallbackHandler[IO](userService))
-      _ <- UserCheckJob.stream(userService) concurrently Bot.polling[IO].follow(userJoinScenario.scenario).through(callbackHandler.callbacks)
+      _ <- UserCheckJob.stream(userService) concurrently Bot.polling[IO].follow(userJoinScenario.scenario, userMessageScenario.scenario).through(callbackHandler.callbacks)
     } yield ()
 
   }
