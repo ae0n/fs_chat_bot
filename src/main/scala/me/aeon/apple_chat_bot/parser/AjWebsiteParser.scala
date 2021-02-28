@@ -54,7 +54,6 @@ class AjWebsiteParser {
 
 
     val bigItemsParsed = bigItems.map { e =>
-      //    e.attr("asdfsa")
       val name = e >> text("h2")
 
       val preId = e.attrs.getOrElse("class", "").split(" ").head.trim

@@ -5,12 +5,13 @@ import canoe.models.messages.{TelegramMessage, TextMessage}
 import cats.effect.Async
 import cats.implicits._
 import me.aeon.apple_chat_bot.services.WebsiteCache
+import org.typelevel.log4cats.Logger
 
-class UserMessageScenario[F[_] : TelegramClient : Async](itemsCache: WebsiteCache[F]) extends BaseScenario {
+class UserMessageScenario[F[_] : TelegramClient : Async](itemsCache: WebsiteCache[F])(implicit log: Logger[F]) extends BaseScenario {
 
   private val actions: PartialFunction[TelegramMessage, F[_]] = {
     case m: TextMessage if (m.text == "/list") =>
-      println(m)
+      log.info(m.toString) >>
       itemsCache.getCachedItems.flatMap { items =>
         val responseText = items.toList.sortBy(_._1).map {
           case (k, v) =>
@@ -39,7 +40,7 @@ class UserMessageScenario[F[_] : TelegramClient : Async](itemsCache: WebsiteCach
 
 object UserMessageScenario {
 
-  def apply[F[_] : TelegramClient : Async](itemsCache: WebsiteCache[F]): F[UserMessageScenario[F]] = {
+  def apply[F[_] : TelegramClient : Async : Logger](itemsCache: WebsiteCache[F]): F[UserMessageScenario[F]] = {
     new UserMessageScenario[F](itemsCache).pure[F]
   }
 

@@ -12,17 +12,18 @@ import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.duration._
 import canoe.syntax._
+import org.typelevel.log4cats.Logger
 
 
-class UserCheckJob[F[_] : Async : Timer](userService: UserService[F])(implicit tgClient: TelegramClient[F]) {
+class UserCheckJob[F[_] : Async : Timer](userService: UserService[F])(implicit tgClient: TelegramClient[F], log:Logger[F]) {
 
   def checkUncheckedUsers = {
-    println("going to check for unverified users")
     for {
+      _ <- log.info("going to check for unverified users")
       users <- userService.findUsersWhoMissedCheckingTime()
       _ <- users.traverse(kickUser)
+      _ <- log.info(s"done ${users.length} users found")
     } yield {
-      println(s"done ${users.length} users found")
       ()
     }
   }
@@ -39,7 +40,7 @@ class UserCheckJob[F[_] : Async : Timer](userService: UserService[F])(implicit t
 
 object UserCheckJob {
 
-  def stream[F[_] : Async : Timer : TelegramClient](userService: UserService[F]) = {
+  def stream[F[_] : Async : Timer : TelegramClient : Logger](userService: UserService[F]) = {
     new UserCheckJob[F](userService).stream
   }
 

@@ -9,8 +9,9 @@ import cats.implicits._
 import fs2.Pipe
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
+import org.typelevel.log4cats.Logger
 
-class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F]) {
+class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F])(implicit log:Logger[F]) {
 
   def handleButtonCallback(query: CallbackQuery) = {
     OptionT.fromOption[F](query.data.flatMap(_.toIntOption))
@@ -24,10 +25,10 @@ class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F]
   def callbacks: Pipe[F, Update, Update] = {
     _.evalTap {
       case CallbackButtonSelected(updateId, callbackQuery) =>
-        println(updateId, callbackQuery)
+        log.info((updateId, callbackQuery).toString) >>
         handleButtonCallback(callbackQuery).void
       case x =>
-        println(x)
+        log.info(x.toString) >>
         Applicative[F].unit
     }
   }
@@ -36,7 +37,7 @@ class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F]
 
 object CallbackHandler {
 
-  def apply[F[_] : Async : TelegramClient](userService: UserService[F]) = {
+  def apply[F[_] : Async : TelegramClient : Logger](userService: UserService[F]) = {
     new CallbackHandler[F](userService).pure[F]
   }
 

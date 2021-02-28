@@ -6,21 +6,20 @@ import doobie._
 import doobie.implicits._
 import me.aeon.apple_chat_bot.dao.ChatUsersDao
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
+import org.typelevel.log4cats.Logger
 
 import java.time.LocalDateTime
 
-class UserService[F[_] : Sync](transactor: Transactor[F]) {
+class UserService[F[_] : Sync](transactor: Transactor[F])(implicit log: Logger[F]) {
 
   def getUserById(id: Int): F[Option[ChatUser]] = {
     ChatUsersDao.findById(id).transact(transactor)
   }
 
   def addUser(user: ChatUser) = {
-    Sync[F].handleError(ChatUsersDao.insert(user).transact(transactor)) {
-      case e =>
-        println(e)
-        None
-    }
+    Sync[F].handleErrorWith(ChatUsersDao.insert(user).transact(transactor))(e =>
+      log.error(e)("addUser error").map(_ => None)
+    )
   }
 
   def getOrCreateUser(user: ChatUser) = {
@@ -46,7 +45,7 @@ class UserService[F[_] : Sync](transactor: Transactor[F]) {
 
 object UserService {
 
-  def apply[F[_] : Sync](transactor: Transactor[F]) = {
+  def apply[F[_] : Sync : Logger](transactor: Transactor[F]) = {
     (new UserService[F](transactor)).pure[F]
   }
 }

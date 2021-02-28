@@ -8,6 +8,7 @@ import cats.effect.Async
 import cats.implicits._
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
+import org.typelevel.log4cats.Logger
 
 class UserJoinScenario[F[_] : TelegramClient : Async](userService: UserService[F]) extends BaseScenario {
 
@@ -49,7 +50,7 @@ class UserJoinScenario[F[_] : TelegramClient : Async](userService: UserService[F
 
 object UserJoinScenario {
 
-  def apply[F[_] : TelegramClient : Async](userService: UserService[F]): F[UserJoinScenario[F]] = {
+  def apply[F[_] : TelegramClient : Async : Logger](userService: UserService[F]): F[UserJoinScenario[F]] = {
     (new UserJoinScenario[F](userService)).pure[F]
   }
 
