@@ -7,9 +7,9 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.implicits._
 import fs2.Pipe
+import io.odin.Logger
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
-import org.typelevel.log4cats.Logger
 
 class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F])(implicit log:Logger[F]) {
 

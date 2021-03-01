@@ -4,8 +4,8 @@ import canoe.api.{Scenario, TelegramClient, chatApi}
 import canoe.models.messages.{TelegramMessage, TextMessage}
 import cats.effect.Async
 import cats.implicits._
+import io.odin.Logger
 import me.aeon.apple_chat_bot.services.WebsiteCache
-import org.typelevel.log4cats.Logger
 
 class UserMessageScenario[F[_] : TelegramClient : Async](itemsCache: WebsiteCache[F])(implicit log: Logger[F]) extends BaseScenario {
 

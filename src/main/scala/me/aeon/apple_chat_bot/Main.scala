@@ -3,14 +3,15 @@ package me.aeon.apple_chat_bot
 import canoe.api.{Bot, TelegramClient}
 import cats.effect.{Blocker, ExitCode, IO, IOApp, Resource}
 import doobie.util.transactor.Transactor
-import fs2._
+import fs2.Stream
+import fs2.io._
 import me.aeon.apple_chat_bot.models.AppConfig
 import me.aeon.apple_chat_bot.scenarios.{CallbackHandler, UserCheckJob, UserJoinScenario, UserMessageScenario}
 import me.aeon.apple_chat_bot.services.{Database, UserService, WebsiteCache}
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax._
+import io.odin.{Logger, consoleLogger}
+import io.odin.syntax._
 
 import scala.concurrent.ExecutionContext
 
@@ -37,8 +38,8 @@ object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
 
     val appStream: Stream[IO, ExitCode] = for {
-      implicit0(logger: Logger[IO]) <- Stream.eval(Slf4jLogger.create[IO])
       config <- Stream.eval[IO, AppConfig](ConfigSource.default.loadF[IO, AppConfig](blocker))
+      implicit0(logger: Logger[IO]) <-  Stream.resource(consoleLogger[IO]().withAsync())
       _ <- Stream.eval(logger.info(config.toString))
       transactorResource <- Stream.eval(Database.transactor[IO](config.database))
       _ <- startBot(config, transactorResource)

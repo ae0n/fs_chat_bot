@@ -4,9 +4,9 @@ import cats.effect.Sync
 import cats.implicits._
 import doobie._
 import doobie.implicits._
+import io.odin.Logger
 import me.aeon.apple_chat_bot.dao.ChatUsersDao
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
-import org.typelevel.log4cats.Logger
 
 import java.time.LocalDateTime
 
@@ -18,7 +18,7 @@ class UserService[F[_] : Sync](transactor: Transactor[F])(implicit log: Logger[F
 
   def addUser(user: ChatUser) = {
     Sync[F].handleErrorWith(ChatUsersDao.insert(user).transact(transactor))(e =>
-      log.error(e)("addUser error").map(_ => None)
+      log.error("addUser error", e).map(_ => None)
     )
   }
 
