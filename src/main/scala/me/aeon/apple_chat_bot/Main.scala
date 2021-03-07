@@ -4,22 +4,21 @@ import canoe.api.{Bot, TelegramClient}
 import cats.effect.{Blocker, ExitCode, IO, IOApp, Resource}
 import doobie.util.transactor.Transactor
 import fs2.Stream
-import fs2.io._
+import io.odin.syntax._
+import io.odin.{Logger, consoleLogger}
 import me.aeon.apple_chat_bot.models.AppConfig
 import me.aeon.apple_chat_bot.scenarios.{CallbackHandler, UserCheckJob, UserJoinScenario, UserMessageScenario}
 import me.aeon.apple_chat_bot.services.{Database, UserService, WebsiteCache}
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax._
-import io.odin.{Logger, consoleLogger}
-import io.odin.syntax._
 
 import scala.concurrent.ExecutionContext
 
 object Main extends IOApp {
 
-  val blocker = Blocker.liftExecutionContext(ExecutionContext.global)
+  val blocker: Blocker = Blocker.liftExecutionContext(ExecutionContext.global)
 
-  def startBot(config: AppConfig, transactorResource: Resource[IO, Transactor[IO]])(implicit logger: Logger[IO]) = {
+  def startBot(config: AppConfig, transactorResource: Resource[IO, Transactor[IO]])(implicit logger: Logger[IO]): Stream[IO, Unit] = {
     for {
       transactor <- Stream.resource(transactorResource)
       implicit0(client: TelegramClient[IO]) <- Stream.resource(

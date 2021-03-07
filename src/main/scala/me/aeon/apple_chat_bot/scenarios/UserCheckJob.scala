@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 
 class UserCheckJob[F[_] : Async : Timer](userService: UserService[F])(implicit tgClient: TelegramClient[F], log: Logger[F]) {
 
-  def checkUncheckedUsers = {
+  def checkUncheckedUsers: F[Unit] = {
     for {
       _ <- log.info("going to check for unverified users")
       users <- userService.findUsersWhoMissedCheckingTime()
@@ -25,19 +25,19 @@ class UserCheckJob[F[_] : Async : Timer](userService: UserService[F])(implicit t
     }
   }
 
-  def kickUser(user: ChatUser) = {
+  def kickUser(user: ChatUser): F[Unit] = {
     for {
       _ <- KickChatMember(user.chatId, user.id).call
       _ <- userService.updateUserState(user.id, UserState.Blocked)
     } yield ()
   }
 
-  def stream = Stream.awakeEvery[F](10.seconds) *> Stream.eval(checkUncheckedUsers)
+  def stream: Stream[F, Unit] = Stream.awakeEvery[F](10.seconds) *> Stream.eval(checkUncheckedUsers)
 }
 
 object UserCheckJob {
 
-  def stream[F[_] : Async : Timer : TelegramClient : Logger](userService: UserService[F]) = {
+  def stream[F[_] : Async : Timer : TelegramClient : Logger](userService: UserService[F]): Stream[F, Unit] = {
     new UserCheckJob[F](userService).stream
   }
 

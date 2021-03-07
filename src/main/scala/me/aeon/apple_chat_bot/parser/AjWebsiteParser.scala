@@ -14,8 +14,8 @@ class AjWebsiteParser {
   import javax.net.ssl._
 
 
-  def enableSSLSocket(): Unit = {
-    HttpsURLConnection.setDefaultHostnameVerifier((hostname: String, session: SSLSession) => true)
+  private def enableSSLSocket(): Unit = {
+    HttpsURLConnection.setDefaultHostnameVerifier((_: String, _: SSLSession) => true)
     val context = SSLContext.getInstance("TLS")
     context.init(null, Array(new X509TrustManager {
       def checkClientTrusted(chain: Array[X509Certificate], authType: String): Unit = {
@@ -26,7 +26,7 @@ class AjWebsiteParser {
 
       }
 
-      def getAcceptedIssuers = Array.empty
+      def getAcceptedIssuers: Array[X509Certificate] = Array.empty
     }), new SecureRandom())
     HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory)
   }

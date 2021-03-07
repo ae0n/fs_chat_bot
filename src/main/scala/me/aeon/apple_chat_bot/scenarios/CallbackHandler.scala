@@ -13,7 +13,7 @@ import me.aeon.apple_chat_bot.services.UserService
 
 class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F])(implicit log:Logger[F]) {
 
-  def handleButtonCallback(query: CallbackQuery) = {
+  def handleButtonCallback(query: CallbackQuery): F[Option[ChatUser]] = {
     OptionT.fromOption[F](query.data.flatMap(_.toIntOption))
       .filter(_ == query.from.id)
       .flatMapF[ChatUser](userService.getUserById)
@@ -37,7 +37,7 @@ class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F]
 
 object CallbackHandler {
 
-  def apply[F[_] : Async : TelegramClient : Logger](userService: UserService[F]) = {
+  def apply[F[_] : Async : TelegramClient : Logger](userService: UserService[F]): F[CallbackHandler[F]] = {
     new CallbackHandler[F](userService).pure[F]
   }
 

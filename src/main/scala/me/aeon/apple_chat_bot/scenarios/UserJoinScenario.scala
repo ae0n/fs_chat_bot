@@ -50,7 +50,7 @@ class UserJoinScenario[F[_] : TelegramClient : Async](userService: UserService[F
 object UserJoinScenario {
 
   def apply[F[_] : TelegramClient : Async ](userService: UserService[F]): F[UserJoinScenario[F]] = {
-    (new UserJoinScenario[F](userService)).pure[F]
+    new UserJoinScenario[F](userService).pure[F]
   }
 
 }

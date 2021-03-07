@@ -10,7 +10,7 @@ import me.aeon.apple_chat_bot.services.WebsiteCache
 class UserMessageScenario[F[_] : TelegramClient : Async](itemsCache: WebsiteCache[F])(implicit log: Logger[F]) extends BaseScenario {
 
   private val actions: PartialFunction[TelegramMessage, F[_]] = {
-    case m: TextMessage if (m.text == "/list") =>
+    case m: TextMessage if m.text == "/list" =>
       log.info(m.toString) >>
       itemsCache.getCachedItems.flatMap { items =>
         val responseText = items.toList.sortBy(_._1).map {

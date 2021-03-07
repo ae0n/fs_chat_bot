@@ -8,7 +8,6 @@ import io.odin.Logger
 import me.aeon.apple_chat_bot.dao.ChatUsersDao
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 
-import java.sql.SQLException
 import java.time.LocalDateTime
 
 class UserService[F[_] : Sync](transactor: Transactor[F])(implicit log: Logger[F]) {
@@ -19,17 +18,17 @@ class UserService[F[_] : Sync](transactor: Transactor[F])(implicit log: Logger[F
     }
   }
 
-  def addUser(user: ChatUser) = {
+  def addUser(user: ChatUser): F[Option[ChatUser]] = {
     Sync[F].handleErrorWith(ChatUsersDao.insert(user).transact(transactor))(e =>
       log.error("addUser error", e).map(_ => None)
     )
   }
 
-  def getOrCreateUser(user: ChatUser) = {
+  def getOrCreateUser(user: ChatUser): F[Option[ChatUser]] = {
     getUserById(user.id).flatMap(_.fold(addUser(user))(_.some.pure[F]))
   }
 
-  def updateUserState(userId: Int, state: UserState) = {
+  def updateUserState(userId: Int, state: UserState): F[Int] = {
     ChatUsersDao.updateUserState(userId, state).transact(transactor).recoverWith{
       e => log.error(s"Unable to update user $userId state", e).map(_ => 0)
     }
@@ -52,7 +51,7 @@ class UserService[F[_] : Sync](transactor: Transactor[F])(implicit log: Logger[F
 
 object UserService {
 
-  def apply[F[_] : Sync : Logger](transactor: Transactor[F]) = {
-    (new UserService[F](transactor)).pure[F]
+  def apply[F[_] : Sync : Logger](transactor: Transactor[F]): F[UserService[F]] = {
+    new UserService[F](transactor).pure[F]
   }
 }

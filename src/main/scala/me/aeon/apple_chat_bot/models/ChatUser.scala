@@ -10,7 +10,7 @@ sealed trait UserState extends EnumEntry with Snakecase
 
 object UserState extends Enum[UserState] with DoobieEnum[UserState] {
 
-  val values = findValues
+  val values: IndexedSeq[UserState] = findValues
 
   case object Unchecked extends UserState
 

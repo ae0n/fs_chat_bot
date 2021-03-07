@@ -28,6 +28,6 @@ class Database[F[_]: Async: ContextShift](config: DatabaseConfig) {
 object Database {
 
   def transactor[F[_]: Async: ContextShift](config: DatabaseConfig): F[Resource[F, HikariTransactor[F]]] =
-    (new Database[F](config)).transactor.pure[F]
+    new Database[F](config).transactor.pure[F]
 
 }
