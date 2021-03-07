@@ -21,6 +21,16 @@ class WebsiteCache[F[_] : effect.Async] {
     parser.collectPrices()
   }
 
+  def getItemDescriptors = getCachedItems.map { items =>
+    val responseText = items.toList.sortBy(_._1).map {
+      case (k, v) =>
+        s"/$k - ${v.name}"
+    }.mkString("\n")
+    responseText
+  }
+
+  def getByKey(key:String) = getCachedItems.map(_.get(key))
+
 }
 
 object WebsiteCache {
