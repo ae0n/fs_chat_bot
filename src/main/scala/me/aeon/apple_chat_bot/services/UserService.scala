@@ -8,12 +8,15 @@ import io.odin.Logger
 import me.aeon.apple_chat_bot.dao.ChatUsersDao
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 
+import java.sql.SQLException
 import java.time.LocalDateTime
 
 class UserService[F[_] : Sync](transactor: Transactor[F])(implicit log: Logger[F]) {
 
   def getUserById(id: Int): F[Option[ChatUser]] = {
-    ChatUsersDao.findById(id).transact(transactor)
+    ChatUsersDao.findById(id).transact(transactor).recoverWith {
+      e => log.error("Unable to get user by id", e).map(_ => None)
+    }
   }
 
   def addUser(user: ChatUser) = {
@@ -27,11 +30,15 @@ class UserService[F[_] : Sync](transactor: Transactor[F])(implicit log: Logger[F
   }
 
   def updateUserState(userId: Int, state: UserState) = {
-    ChatUsersDao.updateUserState(userId, state).transact(transactor)
+    ChatUsersDao.updateUserState(userId, state).transact(transactor).recoverWith{
+      e => log.error(s"Unable to update user $userId state", e).map(_ => 0)
+    }
   }
 
   def findUsersWithState(state: UserState): F[Seq[ChatUser]] = {
-    ChatUsersDao.findByStatus(state).transact(transactor)
+    ChatUsersDao.findByStatus(state).transact(transactor).recoverWith{
+      e => log.error(s"Unable to users with state: $state", e).map(_ => Seq.empty[ChatUser])
+    }
   }
 
   def findUsersWhoMissedCheckingTime(): F[Seq[ChatUser]] = {
