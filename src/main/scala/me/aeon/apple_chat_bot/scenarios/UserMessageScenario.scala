@@ -1,15 +1,17 @@
 package me.aeon.apple_chat_bot.scenarios
 
-import canoe.api.{Scenario, TelegramClient, chatApi}
+import canoe.api.{Scenario, TelegramClient, chatApi, messageApi}
 import canoe.models.messages.{TelegramMessage, TextMessage}
 import cats.effect.{Async, Timer}
 import cats.implicits._
 import io.odin.Logger
 import me.aeon.apple_chat_bot.services.WebsiteCache
 
-class UserMessageScenario[F[_] : TelegramClient : Async](itemsCache: WebsiteCache[F])(implicit log: Logger[F]) extends BaseScenario {
+import scala.concurrent.duration._
 
 class UserMessageScenario[F[_] : TelegramClient : Async : Timer](itemsCache: WebsiteCache[F])(implicit log: Logger[F]) extends BaseScenario {
+
+  val cleanMessageTimeout: FiniteDuration = 30.seconds
 
   private val actions: PartialFunction[TelegramMessage, F[Option[TextMessage]]] = {
     case m: TextMessage if m.text == "/list" =>
@@ -33,10 +35,20 @@ class UserMessageScenario[F[_] : TelegramClient : Async : Timer](itemsCache: Web
     )
   }
 
+  def cleanMessage(messageOpt: Option[TextMessage]): F[Unit] = {
+    messageOpt match {
+      case Some(message) =>
+        Timer[F].sleep(cleanMessageTimeout) >> message.delete.void
+      case None =>
+        ().pure[F]
+    }
+  }
+
   def scenario: Scenario[F, Unit] = {
     for {
       action <- Scenario.expect(actions)
-      _ <- Scenario.eval(action)
+      optMessage <- Scenario.eval(action)
+      _ <- Scenario.eval(cleanMessage(optMessage))
     } yield ()
   }
 
