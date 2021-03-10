@@ -12,7 +12,7 @@ import me.aeon.apple_chat_bot.services.UserService
 
 import scala.concurrent.duration._
 
-class UserCheckJob[F[_] : Async : Timer](userService: UserService[F])(implicit tgClient: TelegramClient[F], log: Logger[F]) {
+class UserCheckJob[F[_]: Async: Timer](userService: UserService[F])(implicit tgClient: TelegramClient[F], log: Logger[F]) {
 
   def checkUncheckedUsers: F[Unit] = {
     for {
@@ -37,7 +37,7 @@ class UserCheckJob[F[_] : Async : Timer](userService: UserService[F])(implicit t
 
 object UserCheckJob {
 
-  def stream[F[_] : Async : Timer : TelegramClient : Logger](userService: UserService[F]): Stream[F, Unit] = {
+  def stream[F[_]: Async: Timer: TelegramClient: Logger](userService: UserService[F]): Stream[F, Unit] = {
     new UserCheckJob[F](userService).stream
   }
 

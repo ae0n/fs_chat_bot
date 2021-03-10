@@ -20,12 +20,21 @@ object UserState extends Enum[UserState] with DoobieEnum[UserState] {
 
 }
 
-case class ChatUser(id: Int, firstName: String, lastName: Option[String], username: Option[String], chatId: Long, status: UserState, firstVisit: LocalDateTime, lastStatusChangedAt: LocalDateTime)
+case class ChatUser(id: Int,
+                    firstName: String,
+                    lastName: Option[String],
+                    username: Option[String],
+                    chatId: Long,
+                    status: UserState,
+                    firstVisit: LocalDateTime,
+                    lastStatusChangedAt: LocalDateTime
+)
 
 object ChatUser {
 
   def fromUser(u: User, chat: Chat): ChatUser = {
-    ChatUser(id = u.id,
+    ChatUser(
+      id = u.id,
       firstName = u.firstName,
       lastName = u.lastName,
       username = u.username,

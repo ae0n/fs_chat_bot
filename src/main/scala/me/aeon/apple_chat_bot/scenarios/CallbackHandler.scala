@@ -11,10 +11,11 @@ import io.odin.Logger
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
 
-class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F])(implicit log:Logger[F]) {
+class CallbackHandler[F[_]: Async: TelegramClient](userService: UserService[F])(implicit log: Logger[F]) {
 
   def handleButtonCallback(query: CallbackQuery): F[Option[ChatUser]] = {
-    OptionT.fromOption[F](query.data.flatMap(_.toIntOption))
+    OptionT
+      .fromOption[F](query.data.flatMap(_.toIntOption))
       .filter(_ == query.from.id)
       .flatMapF[ChatUser](userService.getUserById)
       .filter(_.status == UserState.Unchecked)
@@ -26,10 +27,10 @@ class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F]
     _.evalTap {
       case CallbackButtonSelected(updateId, callbackQuery) =>
         log.info((updateId, callbackQuery).toString) >>
-        handleButtonCallback(callbackQuery).void
+          handleButtonCallback(callbackQuery).void
       case x =>
         log.info(x.toString) >>
-        Applicative[F].unit
+          Applicative[F].unit
     }
   }
 
@@ -37,7 +38,7 @@ class CallbackHandler[F[_] : Async : TelegramClient](userService: UserService[F]
 
 object CallbackHandler {
 
-  def apply[F[_] : Async : TelegramClient : Logger](userService: UserService[F]): F[CallbackHandler[F]] = {
+  def apply[F[_]: Async: TelegramClient: Logger](userService: UserService[F]): F[CallbackHandler[F]] = {
     new CallbackHandler[F](userService).pure[F]
   }
 

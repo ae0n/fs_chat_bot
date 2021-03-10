@@ -9,7 +9,8 @@ import me.aeon.apple_chat_bot.services.WebsiteCache
 
 import scala.concurrent.duration._
 
-class UserMessageScenario[F[_] : TelegramClient : Async : Timer](itemsCache: WebsiteCache[F])(implicit log: Logger[F]) extends BaseScenario {
+class UserMessageScenario[F[_]: TelegramClient: Async: Timer](itemsCache: WebsiteCache[F])(implicit log: Logger[F])
+    extends BaseScenario {
 
   val cleanMessageTimeout: FiniteDuration = 30.seconds
 
@@ -28,11 +29,11 @@ class UserMessageScenario[F[_] : TelegramClient : Async : Timer](itemsCache: Web
   }
 
   def handleUserResponse(msg: TextMessage): F[_] = {
-    itemsCache.getCachedItems.map { items =>
-      items.headOption
-    }.flatMap(item =>
-      msg.chat.send(text(item.toString))
-    )
+    itemsCache.getCachedItems
+      .map { items =>
+        items.headOption
+      }
+      .flatMap(item => msg.chat.send(text(item.toString)))
   }
 
   def cleanMessage(messageOpt: Option[TextMessage]): F[Unit] = {
@@ -56,7 +57,7 @@ class UserMessageScenario[F[_] : TelegramClient : Async : Timer](itemsCache: Web
 
 object UserMessageScenario {
 
-  def apply[F[_] : TelegramClient : Async : Timer : Logger](itemsCache: WebsiteCache[F]): F[UserMessageScenario[F]] = {
+  def apply[F[_]: TelegramClient: Async: Timer: Logger](itemsCache: WebsiteCache[F]): F[UserMessageScenario[F]] = {
     new UserMessageScenario[F](itemsCache).pure[F]
   }
 

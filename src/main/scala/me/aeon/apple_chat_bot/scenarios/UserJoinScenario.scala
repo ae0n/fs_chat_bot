@@ -9,7 +9,7 @@ import cats.implicits._
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
 
-class UserJoinScenario[F[_] : TelegramClient : Async](userService: UserService[F]) extends BaseScenario {
+class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F]) extends BaseScenario {
 
   private val memberAddedPF: PartialFunction[TelegramMessage, ChatMemberAdded] = {
     case m: ChatMemberAdded => m
@@ -33,7 +33,8 @@ class UserJoinScenario[F[_] : TelegramClient : Async](userService: UserService[F
           val newUser = ChatUser.fromUser(user, msg.chat).copy(status = UserState.Unchecked)
           for {
             _ <- OptionT(userService.addUser(newUser)).getOrElseF(Async[F].raiseError(new Throwable("unable to create user")))
-            message <- msg.chat.send(text(strings.userJoinMessage), msg.messageId.some, button(strings.imNotABot, user.id.toString))
+            message <-
+              msg.chat.send(text(strings.userJoinMessage), msg.messageId.some, button(strings.imNotABot, user.id.toString))
           } yield message
       }
   }
@@ -49,7 +50,7 @@ class UserJoinScenario[F[_] : TelegramClient : Async](userService: UserService[F
 
 object UserJoinScenario {
 
-  def apply[F[_] : TelegramClient : Async ](userService: UserService[F]): F[UserJoinScenario[F]] = {
+  def apply[F[_]: TelegramClient: Async](userService: UserService[F]): F[UserJoinScenario[F]] = {
     new UserJoinScenario[F](userService).pure[F]
   }
 

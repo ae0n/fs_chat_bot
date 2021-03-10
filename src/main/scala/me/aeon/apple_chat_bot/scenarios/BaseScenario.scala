@@ -13,5 +13,4 @@ trait BaseScenario {
     Keyboard.Inline(InlineKeyboardMarkup.singleButton(keyboardButton))
   }
 
-
 }

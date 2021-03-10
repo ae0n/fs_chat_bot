@@ -9,27 +9,32 @@ import cats.implicits._
 
 import scala.concurrent.duration._
 
-class WebsiteCache[F[_] : effect.Async] {
+class WebsiteCache[F[_]: effect.Async] {
 
   private val parser = new AjWebsiteParser()
 
-  private implicit val cache: CaffeineCache[Map[String, AjWebsiteParser.Item]] = CaffeineCache[Map[String, AjWebsiteParser.Item]]
+  implicit private val cache: CaffeineCache[Map[String, AjWebsiteParser.Item]] = CaffeineCache[Map[String, AjWebsiteParser.Item]]
 
-  private implicit val mode: Mode[F] = scalacache.CatsEffect.modes.async[F]
+  implicit private val mode: Mode[F] = scalacache.CatsEffect.modes.async[F]
 
-  def getCachedItems: F[Map[String, AjWebsiteParser.Item]] = memoization.memoize(Some(10.minutes)) {
-    parser.collectPrices()
-  }
+  def getCachedItems: F[Map[String, AjWebsiteParser.Item]] =
+    memoization.memoize(Some(10.minutes)) {
+      parser.collectPrices()
+    }
 
-  def getItemDescriptors = getCachedItems.map { items =>
-    val responseText = items.toList.sortBy(_._1).map {
-      case (k, v) =>
-        s"/$k - ${v.name}"
-    }.mkString("\n")
-    responseText
-  }
+  def getItemDescriptors =
+    getCachedItems.map { items =>
+      val responseText = items.toList
+        .sortBy(_._1)
+        .map {
+          case (k, v) =>
+            s"/$k - ${v.name}"
+        }
+        .mkString("\n")
+      responseText
+    }
 
-  def getByKey(key:String) = getCachedItems.map(_.get(key))
+  def getByKey(key: String) = getCachedItems.map(_.get(key))
 
 }
 

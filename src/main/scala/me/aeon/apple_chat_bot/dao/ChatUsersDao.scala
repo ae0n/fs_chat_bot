@@ -22,8 +22,7 @@ object ChatUsersDao extends MetaConstructors with TimeMetaInstances {
 
   def insert(user: ChatUser): doobie.ConnectionIO[Option[ChatUser]] = {
     for {
-      _ <-
-        sql"""INSERT INTO users(id, first_name, last_name, username, chat_id, status, first_visit, last_status_changed_at)
+      _ <- sql"""INSERT INTO users(id, first_name, last_name, username, chat_id, status, first_visit, last_status_changed_at)
              |VALUES(${user.id}, ${user.firstName}, ${user.lastName}, ${user.username}, ${user.chatId}, ${user.status}, ${user.firstVisit}, ${user.lastStatusChangedAt})""".stripMargin.update.run
       newUser <- findById(user.id)
     } yield newUser

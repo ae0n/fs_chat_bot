@@ -13,21 +13,20 @@ class AjWebsiteParser {
   import java.security.cert.X509Certificate
   import javax.net.ssl._
 
-
   private def enableSSLSocket(): Unit = {
     HttpsURLConnection.setDefaultHostnameVerifier((_: String, _: SSLSession) => true)
     val context = SSLContext.getInstance("TLS")
-    context.init(null, Array(new X509TrustManager {
-      def checkClientTrusted(chain: Array[X509Certificate], authType: String): Unit = {
+    context.init(
+      null,
+      Array(new X509TrustManager {
+        def checkClientTrusted(chain: Array[X509Certificate], authType: String): Unit = {}
 
-      }
+        def checkServerTrusted(chain: Array[X509Certificate], authType: String): Unit = {}
 
-      def checkServerTrusted(chain: Array[X509Certificate], authType: String): Unit = {
-
-      }
-
-      def getAcceptedIssuers: Array[X509Certificate] = Array.empty
-    }), new SecureRandom())
+        def getAcceptedIssuers: Array[X509Certificate] = Array.empty
+      }),
+      new SecureRandom()
+    )
     HttpsURLConnection.setDefaultSSLSocketFactory(context.getSocketFactory)
   }
 
@@ -52,15 +51,12 @@ class AjWebsiteParser {
     val bigItems = doc >> elementList("article:not(.right):not(.left)")
     val smallItems = doc >> elementList("article.right, article.left")
 
-
     val bigItemsParsed = bigItems.map { e =>
       val name = e >> text("h2")
 
       val preId = e.attrs.getOrElse("class", "").split(" ").head.trim
 
-
       val id = nameIdRemapper.getOrElse(name, preId).replaceAll("-", "_").trim
-
 
       val modifications = (e >> elementList("li")).flatMap { m =>
         val str = m >> text
@@ -86,14 +82,13 @@ class AjWebsiteParser {
       Item(id.toLowerCase, name, basePrice = price)
     }
 
-    val allItems = (bigItemsParsed ::: smallItemsParsed).foldLeft(Map.empty[String, Item]) {
-      (acc, item) =>
-        acc.get(item.id) match {
-          case Some(stored) =>
-            acc.updated(item.id, stored.copy(modifications = stored.modifications ++ item.modifications))
-          case None =>
-            acc.updated(item.id, item)
-        }
+    val allItems = (bigItemsParsed ::: smallItemsParsed).foldLeft(Map.empty[String, Item]) { (acc, item) =>
+      acc.get(item.id) match {
+        case Some(stored) =>
+          acc.updated(item.id, stored.copy(modifications = stored.modifications ++ item.modifications))
+        case None =>
+          acc.updated(item.id, item)
+      }
     }
 
     //    println(allItems.keys.mkString("\n"))
@@ -102,12 +97,12 @@ class AjWebsiteParser {
 
   }
 
-
 }
 
 object AjWebsiteParser {
 
   case class Price(value: Int) extends AnyVal {
+
     override def toString: String = {
       val discountedPrice = math.floor(value * 0.95).toInt
       s"$value ₽ (~$discountedPrice ₽*)"
@@ -117,6 +112,7 @@ object AjWebsiteParser {
   case class ItemModification(name: String, price: Option[Price])
 
   case class Item(id: String, name: String, modifications: Seq[ItemModification] = Seq.empty, basePrice: Option[Price] = None) {
+
     override def toString: String = {
       val modificationString = modifications.map { m =>
         m.price match {
@@ -138,5 +134,3 @@ object AjWebsiteParser {
   }
 
 }
-
-
