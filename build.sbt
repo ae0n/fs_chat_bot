@@ -22,3 +22,9 @@ libraryDependencies ++= Seq(
 )
 
 addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
+
+enablePlugins(JavaAppPackaging, DockerPlugin)
+dockerBaseImage := "openjdk:14"
+dockerRepository := Some("ghcr.io")
+dockerUsername := Some("ae0n")
+dockerUpdateLatest := true
