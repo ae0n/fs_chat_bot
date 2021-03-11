@@ -22,7 +22,7 @@ class WebsiteCache[F[_]: effect.Async] {
       parser.collectPrices()
     }
 
-  def getItemDescriptors =
+  def getItemDescriptors: F[String] =
     getCachedItems.map { items =>
       val responseText = items.toList
         .sortBy(_._1)
@@ -34,7 +34,7 @@ class WebsiteCache[F[_]: effect.Async] {
       responseText
     }
 
-  def getByKey(key: String) = getCachedItems.map(_.get(key))
+  def getByKey(key: String): F[Option[AjWebsiteParser.Item]] = getCachedItems.map(_.get(key))
 
 }
 
