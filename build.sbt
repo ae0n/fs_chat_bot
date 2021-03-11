@@ -9,6 +9,7 @@ libraryDependencies ++= Seq(
   "org.tpolecat" %% "doobie-core"      % Versions.doobie,
   "org.tpolecat" %% "doobie-hikari"    % Versions.doobie,
   "org.tpolecat" %% "doobie-postgres"  % Versions.doobie,
+  "org.flywaydb" % "flyway-core" % "7.0.0",
   "com.github.pureconfig" %% "pureconfig" % Versions.pureconfig,
   "com.github.pureconfig" %% "pureconfig-cats-effect" % Versions.pureconfig,
   "com.beachape" %% "enumeratum" % "1.6.1",

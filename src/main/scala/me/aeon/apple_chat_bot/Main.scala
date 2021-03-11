@@ -11,6 +11,7 @@ import me.aeon.apple_chat_bot.scenarios.{CallbackHandler, UserCheckJob, UserJoin
 import me.aeon.apple_chat_bot.services.{Database, UserService, WebsiteCache}
 import pureconfig.ConfigSource
 import pureconfig.module.catseffect.syntax._
+import cats.implicits._
 
 import scala.concurrent.ExecutionContext
 
@@ -45,6 +46,7 @@ object Main extends IOApp {
       config <- Stream.eval[IO, AppConfig](ConfigSource.default.loadF[IO, AppConfig](blocker))
       implicit0(logger: Logger[IO]) <- Stream.resource(consoleLogger[IO](minLevel = Level.Info).withAsync())
       _ <- Stream.eval(logger.info(config.toString))
+      _ <- Stream.eval(Database.migrate[IO](config.database).whenA(config.database.shouldMigrate))
       transactorResource <- Stream.eval(Database.transactor[IO](config.database))
       _ <- startBot(config, transactorResource)
     } yield ExitCode.Success

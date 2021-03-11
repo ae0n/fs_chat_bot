@@ -3,7 +3,13 @@ package me.aeon.apple_chat_bot.models
 import pureconfig.ConfigReader
 import pureconfig.generic.semiauto._
 
-case class DatabaseConfig(username: String, password: String, url: String, connectionPoolSize: Int, driver: String)
+case class DatabaseConfig(username: String,
+                          password: String,
+                          url: String,
+                          connectionPoolSize: Int,
+                          driver: String,
+                          shouldMigrate: Boolean
+)
 
 object DatabaseConfig {
   implicit val databaseConfigReader: ConfigReader[DatabaseConfig] = deriveReader[DatabaseConfig]
