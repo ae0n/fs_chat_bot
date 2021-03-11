@@ -1,13 +1,16 @@
 package me.aeon.apple_chat_bot.scenarios
 
-import canoe.api.TelegramClient
-import canoe.models.{CallbackButtonSelected, CallbackQuery, Update}
+import canoe.api.{TelegramClient, messageApi}
+import canoe.methods.chats.RestrictChatMember
+import canoe.models.{CallbackButtonSelected, CallbackQuery, ChatId, Update}
+import canoe.syntax._
 import cats.Applicative
 import cats.data.OptionT
 import cats.effect.Async
 import cats.implicits._
 import fs2.Pipe
 import io.odin.Logger
+import me.aeon.apple_chat_bot.helpers.Permissions
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
 
@@ -20,6 +23,10 @@ class CallbackHandler[F[_]: Async: TelegramClient](userService: UserService[F])(
       .flatMapF[ChatUser](userService.getUserById)
       .filter(_.status == UserState.Unchecked)
       .semiflatTap(u => userService.updateUserState(u.id, UserState.Normal))
+      .semiflatTap(u => RestrictChatMember(ChatId(u.chatId), u.id, Permissions.defaultPermissions).call)
+      .flatTap { _ =>
+        OptionT.fromOption[F](query.message).semiflatMap(m => m.delete)
+      }
       .value
   }
 

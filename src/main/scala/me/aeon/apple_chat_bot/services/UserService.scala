@@ -7,6 +7,7 @@ import doobie.implicits._
 import io.odin.Logger
 import me.aeon.apple_chat_bot.dao.ChatUsersDao
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
+import me.aeon.apple_chat_bot.services.UserService.timeToAnswer
 
 import java.time.LocalDateTime
 
@@ -41,13 +42,15 @@ class UserService[F[_]: Sync](transactor: Transactor[F])(implicit log: Logger[F]
   def findUsersWhoMissedCheckingTime(): F[Seq[ChatUser]] = {
     findUsersWithState(UserState.Unchecked)
       .map(_.filter { u =>
-        u.lastStatusChangedAt.isBefore(LocalDateTime.now().minusMinutes(3))
+        u.lastStatusChangedAt.isBefore(LocalDateTime.now().minusMinutes(timeToAnswer))
       })
   }
 
 }
 
 object UserService {
+
+  val timeToAnswer = 5
 
   def apply[F[_]: Sync: Logger](transactor: Transactor[F]): F[UserService[F]] = {
     new UserService[F](transactor).pure[F]

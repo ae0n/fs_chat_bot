@@ -6,6 +6,7 @@ import canoe.models.messages.{ChatMemberAdded, TelegramMessage, TextMessage}
 import cats.data.OptionT
 import cats.effect.Async
 import cats.implicits._
+import me.aeon.apple_chat_bot.helpers.Permissions
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
 
@@ -33,6 +34,7 @@ class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F])
           val newUser = ChatUser.fromUser(user, msg.chat).copy(status = UserState.Unchecked)
           for {
             _ <- OptionT(userService.addUser(newUser)).getOrElseF(Async[F].raiseError(new Throwable("unable to create user")))
+            _ <- msg.chat.restrictMember(user.id, Permissions.restrictedPermissions)
             message <-
               msg.chat.send(text(strings.userJoinMessage), msg.messageId.some, button(strings.imNotABot, user.id.toString))
           } yield message
