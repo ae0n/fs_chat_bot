@@ -15,7 +15,7 @@ class UserMessageScenario[F[_]: TelegramClient: Async: Timer](itemsCache: Websit
   val cleanMessageTimeout: FiniteDuration = 30.seconds
 
   private val actions: PartialFunction[TelegramMessage, F[Option[TextMessage]]] = {
-    case m: TextMessage if m.text == "/list" =>
+    case m: TextMessage if m.text.startsWith("/list") =>
       log.info(m.toString) >>
         itemsCache.getItemDescriptors.flatMap { responseText =>
           m.chat.send(text(responseText), Some(m.messageId)).map(_.some)
