@@ -16,10 +16,9 @@ class UserCheckJob[F[_]: Async: Timer](userService: UserService[F])(implicit tgC
 
   def checkUncheckedUsers: F[Unit] = {
     for {
-      _ <- log.info("going to check for unverified users")
       users <- userService.findUsersWhoMissedCheckingTime()
       _ <- users.traverse(kickUser)
-      _ <- log.info(s"done ${users.length} users found")
+      _ <- log.info(s"users check done, was processed ${users.length} users").whenA(users.nonEmpty)
     } yield {
       ()
     }
