@@ -22,6 +22,8 @@ class UserCheckJob[F[_]: Async: Timer](userService: UserService[F])(implicit tgC
     } yield {
       ()
     }
+  }.handleErrorWith { err =>
+    Logger[F].error("Got error in UserJoinScenario", err)
   }
 
   def kickUser(user: ChatUser): F[Unit] = {
