@@ -1,16 +1,17 @@
 package me.aeon.apple_chat_bot.scenarios
 
-import canoe.api._
+import canoe.api.{Scenario, _}
 import canoe.models.User
 import canoe.models.messages.{ChatMemberAdded, TelegramMessage, TextMessage}
 import cats.data.OptionT
 import cats.effect.Async
 import cats.implicits._
+import io.odin.Logger
 import me.aeon.apple_chat_bot.helpers.Permissions
 import me.aeon.apple_chat_bot.models.{ChatUser, UserState}
 import me.aeon.apple_chat_bot.services.UserService
 
-class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F]) extends BaseScenario {
+class UserJoinScenario[F[_]: TelegramClient: Async : Logger](userService: UserService[F]) extends BaseScenario {
 
   private val memberAddedPF: PartialFunction[TelegramMessage, ChatMemberAdded] = {
     case m: ChatMemberAdded => m
@@ -21,7 +22,6 @@ class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F])
   }
 
   def greetUser(msg: ChatMemberAdded, user: User): F[TextMessage] = {
-
     userService
       .getUserById(user.id)
       .flatMap {
@@ -42,17 +42,21 @@ class UserJoinScenario[F[_]: TelegramClient: Async](userService: UserService[F])
   }
 
   def scenario(implicit FA: Async[F]): Scenario[F, Unit] = {
-    for {
+    (for {
       newMembers <- Scenario.expect(memberAddedPF)
       _ <- Scenario.eval(sendGreetingMessage(newMembers))
-    } yield ()
+    } yield ()).handleErrorWith{ err =>
+      Scenario.eval {
+        Logger[F].error("Got error in UserJoinScenario", err)
+      }
+    }
   }
 
 }
 
 object UserJoinScenario {
 
-  def apply[F[_]: TelegramClient: Async](userService: UserService[F]): F[UserJoinScenario[F]] = {
+  def apply[F[_]: TelegramClient: Async : Logger](userService: UserService[F]): F[UserJoinScenario[F]] = {
     new UserJoinScenario[F](userService).pure[F]
   }
 

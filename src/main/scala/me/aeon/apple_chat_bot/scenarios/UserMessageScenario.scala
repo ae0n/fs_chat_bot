@@ -46,11 +46,15 @@ class UserMessageScenario[F[_]: TelegramClient: Async: Timer](itemsCache: Websit
   }
 
   def scenario: Scenario[F, Unit] = {
-    for {
+    (for {
       action <- Scenario.expect(actions)
       optMessage <- Scenario.eval(action)
       _ <- Scenario.eval(cleanMessage(optMessage))
-    } yield ()
+    } yield ()).handleErrorWith{ err =>
+      Scenario.eval {
+        Logger[F].error("Got error in UserMessageScenario", err)
+      }
+    }
   }
 
 }
