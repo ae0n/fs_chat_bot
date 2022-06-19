@@ -32,7 +32,7 @@ object Main extends IOApp {
       userJoinScenario <- Stream.eval(UserJoinScenario[IO](userService))
       userMessageScenario <- Stream.eval(UserMessageScenario[IO](websiteCache))
       callbackHandler <- Stream.eval(CallbackHandler[IO](userService))
-      _ <- UserCheckJob.stream(userService) concurrently Bot
+      _ <- Bot
              .polling[IO]
              .follow(userJoinScenario.scenario, userMessageScenario.scenario)
              .through(callbackHandler.callbacks)
